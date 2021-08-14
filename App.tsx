@@ -1,21 +1,58 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useState } from "react";
+import { StyleSheet, View } from "react-native";
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+import { Button, StyleGuide, cards } from "./src/components/core";
+
+import AnimatedCard from "./src/components/AnimatedCard";
+import Animated, {
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { useEffect } from "react";
+import { useDerivedValue } from "react-native-reanimated";
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: StyleGuide.palette.background,
+    justifyContent: "flex-end",
   },
 });
+
+const useSpring = (
+  state: number | boolean,
+  config?: Animated.WithSpringConfig | undefined
+) => {
+  const value = useSharedValue(0);
+
+  useEffect(() => {
+    value.value = typeof state === "number" ? state : state ? 1 : 0;
+  }, [state, value]);
+
+  return useDerivedValue(() => {
+    return withSpring(value.value);
+  });
+};
+
+const App = () => {
+  const toggled = useSharedValue(false);
+  // const [toggled, setToggle] = useState(false);
+  const transition = useDerivedValue(() => {
+    return withSpring(toggled.value);
+  });
+  return (
+    <View style={styles.container}>
+      {cards.slice(0, 3).map((card, index) => (
+        <AnimatedCard key={card} {...{ index, card, transition }} />
+      ))}
+      <Button
+        label={toggled.value ? "Reset" : "Start"}
+        primary
+        onPress={() => (toggled.value = !toggled.value)}
+      />
+    </View>
+  );
+};
+
+export default App;
